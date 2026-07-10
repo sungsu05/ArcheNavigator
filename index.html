@@ -1,59 +1,381 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>ArcheAge Fan Map</title>
+  <title>ArcheNavigator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
   <style>
-    html, body { 
-      height: 100%; 
-      margin: 0; 
-      padding: 0; 
-      background: #d0be75; 
+    :root {
+      color-scheme: dark;
+      --panel: rgba(24, 22, 18, 0.88);
+      --line: rgba(236, 204, 140, 0.28);
+      --text: #f6ead0;
+      --muted: #cdbb95;
+      --accent: #e7b85f;
+      --button: #6e512c;
+      --button-hover: #8a6636;
     }
-    #map { 
-      width: 100%; 
-      height: 100vh; 
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #d0be75;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
       background: #d0be75;
     }
+
+    .coord-panel {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 1000;
+      width: min(340px, calc(100vw - 24px));
+      box-sizing: border-box;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(6px);
+    }
+
+    .coord-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .coord-title span {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .coord-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .coord-row label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    select,
+    input,
+    button {
+      min-height: 34px;
+      box-sizing: border-box;
+      border-radius: 6px;
+      border: 1px solid rgba(236, 204, 140, 0.32);
+      font: inherit;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 0 8px;
+      background: rgba(255, 248, 222, 0.95);
+      color: #2d2417;
+    }
+
+    button {
+      padding: 0 10px;
+      background: var(--button);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--button-hover);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .readout {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .readout strong {
+      color: var(--text);
+    }
+
     .leaflet-control-zoom a {
       background-color: #f4e6c7 !important;
       border: 1px solid #8b7355 !important;
       color: #5d4e37 !important;
     }
+
     .leaflet-control-zoom a:hover {
       background-color: #e6d3a3 !important;
+    }
+
+    @media (max-width: 640px) {
+      .coord-panel {
+        left: 8px;
+        right: 8px;
+        top: 8px;
+        width: auto;
+        padding: 12px;
+      }
+
+      .coord-title {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <section class="coord-panel" aria-label="좌표 입력">
+    <div class="coord-title">
+      ArcheNavigator
+      <span>좌표 시스템</span>
+    </div>
+
+    <div class="coord-row">
+      <label for="lngDir">동서</label>
+      <select id="lngDir">
+        <option value="E">E</option>
+        <option value="W">W</option>
+      </select>
+      <input id="lngDeg" inputmode="numeric" type="number" min="0" step="1" aria-label="동서 도" placeholder="도">
+      <input id="lngMin" inputmode="numeric" type="number" min="0" max="59" step="1" aria-label="동서 분" placeholder="분">
+    </div>
+
+    <div class="coord-row">
+      <label for="lngSec">초</label>
+      <input id="lngSec" inputmode="decimal" type="number" min="0" max="59.999" step="0.001" aria-label="동서 초" placeholder="초">
+      <div></div>
+      <div></div>
+    </div>
+
+    <div class="coord-row">
+      <label for="latDir">남북</label>
+      <select id="latDir">
+        <option value="S">S</option>
+        <option value="N">N</option>
+      </select>
+      <input id="latDeg" inputmode="numeric" type="number" min="0" step="1" aria-label="남북 도" placeholder="도">
+      <input id="latMin" inputmode="numeric" type="number" min="0" max="59" step="1" aria-label="남북 분" placeholder="분">
+    </div>
+
+    <div class="coord-row">
+      <label for="latSec">초</label>
+      <input id="latSec" inputmode="decimal" type="number" min="0" max="59.999" step="0.001" aria-label="남북 초" placeholder="초">
+      <div></div>
+      <div></div>
+    </div>
+
+    <div class="actions">
+      <button id="placeMarker" type="button">마커 표시</button>
+      <button id="copyLink" type="button">링크 복사</button>
+    </div>
+
+    <div class="readout" id="readout">
+      지도 위를 누르거나 좌표를 입력하면 위치가 표시됩니다.
+    </div>
+  </section>
+
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script>
-    function getUrlParam(param) {
-      var regex = new RegExp('[?&]' + param + '=([^&#]*)');
-      var results = regex.exec(window.location.href);
-      return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, ' '));
-    }
-    function DegToLat(k, d, m, s) {
-      var l = (parseInt(d) || 0) + (parseInt(m) || 0) / 60 + (parseInt(s) || 0) / 3600;
-      if (k == 'N') l = -l;
-      var zlat = -0.535747;
-      var hlat = 0.0573585;
-      var lat = -l * hlat + zlat;
-      return lat;
-    }
-    function DegToLng(k, d, m, s) {
-      var l = (parseInt(d) || 0) + (parseInt(m) || 0) / 60 + (parseInt(s) || 0) / 3600;
-      if (k == 'E') l = -l;
-      var zlng = 1.321600;
-      var hlng = 0.057750;
-      var lng = -l * hlng + zlng;
-      return lng;
+    var zlat = -0.535747;
+    var hlat = 0.0573585;
+    var zlng = 1.321600;
+    var hlng = 0.057750;
+    var marker = null;
+
+    function byId(id) {
+      return document.getElementById(id);
     }
 
-    var map = L.map('map', {
+    function getUrlParam(param) {
+      var regex = new RegExp("[?&]" + param + "=([^&#]*)");
+      var results = regex.exec(window.location.href);
+      return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    function cleanNumber(value) {
+      var num = parseFloat(value);
+      return Number.isFinite(num) ? num : 0;
+    }
+
+    function formatSeconds(value) {
+      var fixed = Math.round(value * 1000) / 1000;
+      return String(fixed).replace(/\.?0+$/, "");
+    }
+
+    function dmsToDecimal(deg, min, sec) {
+      return cleanNumber(deg) + cleanNumber(min) / 60 + cleanNumber(sec) / 3600;
+    }
+
+    function decimalToDms(value) {
+      var total = Math.abs(value);
+      var deg = Math.floor(total);
+      var minFloat = (total - deg) * 60;
+      var min = Math.floor(minFloat);
+      var sec = (minFloat - min) * 60;
+
+      if (sec >= 59.9995) {
+        sec = 0;
+        min += 1;
+      }
+      if (min >= 60) {
+        min = 0;
+        deg += 1;
+      }
+
+      return {
+        deg: deg,
+        min: min,
+        sec: sec
+      };
+    }
+
+    function degToLat(dir, deg, min, sec) {
+      var value = dmsToDecimal(deg, min, sec);
+      if (dir === "N") value = -value;
+      return -value * hlat + zlat;
+    }
+
+    function degToLng(dir, deg, min, sec) {
+      var value = dmsToDecimal(deg, min, sec);
+      if (dir === "E") value = -value;
+      return -value * hlng + zlng;
+    }
+
+    function latToCoord(lat) {
+      var value = -(lat - zlat) / hlat;
+      return {
+        dir: value < 0 ? "N" : "S",
+        dms: decimalToDms(value)
+      };
+    }
+
+    function lngToCoord(lng) {
+      var value = -(lng - zlng) / hlng;
+      return {
+        dir: value < 0 ? "E" : "W",
+        dms: decimalToDms(value)
+      };
+    }
+
+    function readInputs() {
+      return {
+        latDir: byId("latDir").value,
+        latDeg: byId("latDeg").value,
+        latMin: byId("latMin").value,
+        latSec: byId("latSec").value,
+        lngDir: byId("lngDir").value,
+        lngDeg: byId("lngDeg").value,
+        lngMin: byId("lngMin").value,
+        lngSec: byId("lngSec").value
+      };
+    }
+
+    function writeInputs(latCoord, lngCoord) {
+      byId("latDir").value = latCoord.dir;
+      byId("latDeg").value = latCoord.dms.deg;
+      byId("latMin").value = latCoord.dms.min;
+      byId("latSec").value = formatSeconds(latCoord.dms.sec);
+      byId("lngDir").value = lngCoord.dir;
+      byId("lngDeg").value = lngCoord.dms.deg;
+      byId("lngMin").value = lngCoord.dms.min;
+      byId("lngSec").value = formatSeconds(lngCoord.dms.sec);
+    }
+
+    function coordText(latCoord, lngCoord) {
+      return lngCoord.dir + " " + lngCoord.dms.deg + "° " + lngCoord.dms.min + "' " + formatSeconds(lngCoord.dms.sec) + "\" / " +
+        latCoord.dir + " " + latCoord.dms.deg + "° " + latCoord.dms.min + "' " + formatSeconds(latCoord.dms.sec) + "\"";
+    }
+
+    function setReadout(text) {
+      byId("readout").textContent = text;
+    }
+
+    function setMarker(lat, lng, shouldPan) {
+      if (!marker) {
+        marker = L.marker([lat, lng]).addTo(map);
+      } else {
+        marker.setLatLng([lat, lng]);
+      }
+
+      if (shouldPan) {
+        map.setView([lat, lng], Math.max(map.getZoom(), 11));
+      }
+
+      var latCoord = latToCoord(lat);
+      var lngCoord = lngToCoord(lng);
+      writeInputs(latCoord, lngCoord);
+      marker.bindPopup(coordText(latCoord, lngCoord)).openPopup();
+      setReadout("표시 좌표: " + coordText(latCoord, lngCoord));
+    }
+
+    function placeMarkerFromInputs() {
+      var input = readInputs();
+      var lat = degToLat(input.latDir, input.latDeg, input.latMin, input.latSec);
+      var lng = degToLng(input.lngDir, input.lngDeg, input.lngMin, input.lngSec);
+      setMarker(lat, lng, true);
+    }
+
+    function buildShareUrl() {
+      var input = readInputs();
+      var params = new URLSearchParams();
+      params.set("dlngk", input.lngDir);
+      params.set("dlngd", cleanNumber(input.lngDeg));
+      params.set("dlngm", cleanNumber(input.lngMin));
+      params.set("dlngs", cleanNumber(input.lngSec));
+      params.set("dlatk", input.latDir);
+      params.set("dlatd", cleanNumber(input.latDeg));
+      params.set("dlatm", cleanNumber(input.latMin));
+      params.set("dlats", cleanNumber(input.latSec));
+      return window.location.origin + window.location.pathname + "?" + params.toString();
+    }
+
+    function copyCurrentLink() {
+      var url = buildShareUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () {
+          setReadout("링크를 복사했습니다: " + url);
+        }, function () {
+          setReadout(url);
+        });
+      } else {
+        setReadout(url);
+      }
+    }
+
+    var map = L.map("map", {
       minZoom: 9,
       maxZoom: 13,
       center: [-1.1, 1.1],
@@ -61,25 +383,63 @@
       attributionControl: false
     });
 
-    var gisaaLayer = L.tileLayer('https://gisaa.ru/maps/Z{z}/{y}/{x}.jpg', {
+    L.tileLayer("https://gisaa.ru/maps/Z{z}/{y}/{x}.jpg", {
       minZoom: 9,
       maxZoom: 13,
       tileSize: 256,
       noWrap: true
     }).addTo(map);
 
-    var dlatk = getUrlParam('dlatk');
-    var dlatd = getUrlParam('dlatd');
-    var dlatm = getUrlParam('dlatm');
-    var dlats = getUrlParam('dlats');
-    var dlngk = getUrlParam('dlngk');
-    var dlngd = getUrlParam('dlngd');
-    var dlngm = getUrlParam('dlngm');
-    var dlngs = getUrlParam('dlngs');
+    byId("placeMarker").addEventListener("click", placeMarkerFromInputs);
+    byId("copyLink").addEventListener("click", copyCurrentLink);
+
+    map.on("click", function (event) {
+      setMarker(event.latlng.lat, event.latlng.lng, false);
+    });
+
+    var dlatk = getUrlParam("dlatk");
+    var dlatd = getUrlParam("dlatd");
+    var dlatm = getUrlParam("dlatm");
+    var dlats = getUrlParam("dlats");
+    var dlngk = getUrlParam("dlngk");
+    var dlngd = getUrlParam("dlngd");
+    var dlngm = getUrlParam("dlngm");
+    var dlngs = getUrlParam("dlngs");
+
     if (dlatk && dlatd && dlatm && dlats && dlngk && dlngd && dlngm && dlngs) {
-      var lat = DegToLat(dlatk, dlatd, dlatm, dlats);
-      var lng = DegToLng(dlngk, dlngd, dlngm, dlngs);
-      L.marker([lat, lng]).addTo(map);
+      writeInputs({
+        dir: dlatk,
+        dms: {
+          deg: cleanNumber(dlatd),
+          min: cleanNumber(dlatm),
+          sec: cleanNumber(dlats)
+        }
+      }, {
+        dir: dlngk,
+        dms: {
+          deg: cleanNumber(dlngd),
+          min: cleanNumber(dlngm),
+          sec: cleanNumber(dlngs)
+        }
+      });
+      placeMarkerFromInputs();
+    } else {
+      writeInputs({
+        dir: "S",
+        dms: {
+          deg: 1,
+          min: 5,
+          sec: 49
+        }
+      }, {
+        dir: "E",
+        dms: {
+          deg: 5,
+          min: 53,
+          sec: 57
+        }
+      });
+      placeMarkerFromInputs();
     }
   </script>
 </body>
