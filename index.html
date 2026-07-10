@@ -67,7 +67,7 @@
 
     .coord-row {
       display: grid;
-      grid-template-columns: 44px 1fr 1fr 1fr;
+      grid-template-columns: 44px 70px 1fr 1fr 1fr;
       gap: 6px;
       margin-bottom: 8px;
       align-items: center;
@@ -171,13 +171,7 @@
       </select>
       <input id="lngDeg" inputmode="numeric" type="number" min="0" step="1" aria-label="동서 도" placeholder="도">
       <input id="lngMin" inputmode="numeric" type="number" min="0" max="59" step="1" aria-label="동서 분" placeholder="분">
-    </div>
-
-    <div class="coord-row">
-      <label for="lngSec">초</label>
       <input id="lngSec" inputmode="decimal" type="number" min="0" max="59.999" step="0.001" aria-label="동서 초" placeholder="초">
-      <div></div>
-      <div></div>
     </div>
 
     <div class="coord-row">
@@ -188,13 +182,7 @@
       </select>
       <input id="latDeg" inputmode="numeric" type="number" min="0" step="1" aria-label="남북 도" placeholder="도">
       <input id="latMin" inputmode="numeric" type="number" min="0" max="59" step="1" aria-label="남북 분" placeholder="분">
-    </div>
-
-    <div class="coord-row">
-      <label for="latSec">초</label>
       <input id="latSec" inputmode="decimal" type="number" min="0" max="59.999" step="0.001" aria-label="남북 초" placeholder="초">
-      <div></div>
-      <div></div>
     </div>
 
     <div class="actions">
@@ -348,6 +336,11 @@
       setMarker(lat, lng, true);
     }
 
+    function placeMarkerAtMapCenter() {
+      var center = map.getCenter();
+      setMarker(center.lat, center.lng, false);
+    }
+
     function buildShareUrl() {
       var input = readInputs();
       var params = new URLSearchParams();
@@ -424,22 +417,7 @@
       });
       placeMarkerFromInputs();
     } else {
-      writeInputs({
-        dir: "S",
-        dms: {
-          deg: 1,
-          min: 5,
-          sec: 49
-        }
-      }, {
-        dir: "E",
-        dms: {
-          deg: 5,
-          min: 53,
-          sec: 57
-        }
-      });
-      placeMarkerFromInputs();
+      placeMarkerAtMapCenter();
     }
   </script>
 </body>
