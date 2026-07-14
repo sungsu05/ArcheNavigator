@@ -110,7 +110,7 @@
 
     .actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 8px;
       margin-top: 10px;
     }
@@ -187,7 +187,6 @@
 
     <div class="actions">
       <button id="placeMarker" type="button">마커 표시</button>
-      <button id="copyLink" type="button">링크 복사</button>
     </div>
 
     <div class="readout" id="readout">
@@ -341,33 +340,6 @@
       setMarker(center.lat, center.lng, false);
     }
 
-    function buildShareUrl() {
-      var input = readInputs();
-      var params = new URLSearchParams();
-      params.set("dlngk", input.lngDir);
-      params.set("dlngd", cleanNumber(input.lngDeg));
-      params.set("dlngm", cleanNumber(input.lngMin));
-      params.set("dlngs", cleanNumber(input.lngSec));
-      params.set("dlatk", input.latDir);
-      params.set("dlatd", cleanNumber(input.latDeg));
-      params.set("dlatm", cleanNumber(input.latMin));
-      params.set("dlats", cleanNumber(input.latSec));
-      return window.location.origin + window.location.pathname + "?" + params.toString();
-    }
-
-    function copyCurrentLink() {
-      var url = buildShareUrl();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(function () {
-          setReadout("링크를 복사했습니다: " + url);
-        }, function () {
-          setReadout(url);
-        });
-      } else {
-        setReadout(url);
-      }
-    }
-
     var map = L.map("map", {
       minZoom: 9,
       maxZoom: 13,
@@ -384,7 +356,6 @@
     }).addTo(map);
 
     byId("placeMarker").addEventListener("click", placeMarkerFromInputs);
-    byId("copyLink").addEventListener("click", copyCurrentLink);
 
     map.on("click", function (event) {
       setMarker(event.latlng.lat, event.latlng.lng, false);
